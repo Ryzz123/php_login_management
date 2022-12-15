@@ -5,6 +5,7 @@ namespace FebriAnandaLubis\Belajar\PHP\MVC\Service;
 use FebriAnandaLubis\Belajar\PHP\MVC\Config\Database;
 use FebriAnandaLubis\Belajar\PHP\MVC\Domain\User;
 use FebriAnandaLubis\Belajar\PHP\MVC\Exception\ValidationException;
+use FebriAnandaLubis\Belajar\PHP\MVC\Model\UserLoginRequest;
 use FebriAnandaLubis\Belajar\PHP\MVC\Model\UserRegisterRequest;
 use FebriAnandaLubis\Belajar\PHP\MVC\Repository\UserRepository;
 use PHPUnit\Framework\TestCase;
@@ -87,6 +88,67 @@ class UserServiceTest extends TestCase
         $request->password = 'rahasia';
 
         $this->userService->register($request);
+    }
+
+    // unit test untuk mengetes jika user login tidak ada
+    public function testLoginNotFound()
+    {
+        // expectasi jika gagal login
+        $this->expectException(ValidationException::class);
+
+        $request = new UserLoginRequest();
+        $request->id = 'febri';
+        $request->password = 'febri';
+
+        $this->userService->login($request);
+    }
+
+    // unit test untuk test login jika password salah
+    public function testLoginWrongPassword()
+    {
+        // untuk test password salah adalah kita harus bikin user terlebih dahulu
+        $user = new User();
+        $user->id = 'febri';
+        $user->name = 'Febri';
+
+        // bikin encrypt/pengamanan password
+        $user->password = password_hash("febri", PASSWORD_BCRYPT);
+
+        // expectasi jika gagal login
+        $this->expectException(ValidationException::class);
+
+        $request = new UserLoginRequest();
+        $request->id = 'febri';
+        $request->password = 'salah';
+
+        $this->userService->login($request);
+    }
+
+    // unit test untuk test login jika berhasil
+    public function testLoginSuccess()
+    {
+        // untuk test login berhasil
+        $user = new User();
+        $user->id = 'febri';
+        $user->name = 'Febri';
+
+        // bikin encrypt/pengamanan password
+        $user->password = password_hash("febri", PASSWORD_BCRYPT);
+
+        // expectasi berhasil login
+        $this->expectException(ValidationException::class);
+
+        $request = new UserLoginRequest();
+        $request->id = 'febri';
+        $request->password = 'febri';
+
+        $response = $this->userService->login($request);
+
+        // test untuk jika dua nilai nya sama dari id dan passwordnya
+        self::assertEquals($request->id, $response->user->id);
+
+        // assert true untuk test jika nilainya sama maka true/ benar
+        self::assertTrue(password_verify($request->password, $response->user->password));
     }
 
 }
